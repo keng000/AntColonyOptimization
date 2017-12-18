@@ -28,7 +28,7 @@ six==1.11.0
 ### デモまで
 1. リポジトリクローン
 
-    `git clone bruichladdich`
+    `git clone git@gitlab.com:9hdw/bruichladdich.git`
 
 1. モジュールインストール
 
