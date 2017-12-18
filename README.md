@@ -32,7 +32,10 @@ six==1.11.0
 
 1. モジュールインストール
 
-    `pip install -r requirements.txt`
+    ```
+    cd bruichladdich
+    pip install -r requirements.txt
+    ```
 
 1. デモの実行
 
