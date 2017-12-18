@@ -49,7 +49,7 @@ six==1.11.0
 ### サンプルデータの作りかた
 背景画像差し替えや、探索するノードの設定方法。
 1. 新しい画像を用意する。
-    ここでは例として、google_map_japan.pngを用意し、`data/` に配置する。
+    ここでは例として、`google_map_japan.png` を用意し、`data/` に配置する。
     <img src="data/google_map_japan.png" width=500>
 
 1. `tasks/create_dataset.py` の2つのパラメータを書き変える。
