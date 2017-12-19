@@ -49,7 +49,7 @@ class antVisualizer(AntColony):
                                              self.nodes[self.shortest_path[start + 1]][0]),
                                             (self.nodes[self.shortest_path[start]][1],
                                              self.nodes[self.shortest_path[start + 1]][1]),
-                                            color="b", alpha=1.0, lw=1.5)
+                                            color="b", alpha=1.0, lw=2)
 
                         self.shortest_line_obj.append(obj)
                     plt.draw()
@@ -89,7 +89,7 @@ class antVisualizer(AntColony):
 
         for start in range(len(self.pheromone_mat)):
             for end in range(len(self.pheromone_mat)):
-                update_alpha = float(self.pheromone_mat[start][end]) / self.max_pheromone
+                update_alpha = float(self.pheromone_mat[start][end]) / np.max(self.pheromone_mat)
                 self.line_obj_box[start][end].set_alpha(update_alpha)
 
         plt.draw()
