@@ -21,6 +21,7 @@ class antVisualizer(AntColony):
         )
 
         # for visualization
+        self.steps = 0
         self.base_img_path = base_img_path
         self.ax = None
         self.shortest_line_obj = []
@@ -29,6 +30,7 @@ class antVisualizer(AntColony):
 
     def run_optimizer(self):
         for _ in range(self.iterations):
+            self.steps = _
             ants = self._init_ants()
 
             for ant in ants:
@@ -67,8 +69,8 @@ class antVisualizer(AntColony):
     def _visualize_graph(self, init=False):
         if init is True:
             fig, self.ax = plt.subplots()
-            # fig.set_size_inches(15, 12, forward=True)
-            fig.set_size_inches(8, 6, forward=True)
+            fig.set_size_inches(15, 12, forward=True)
+            # fig.set_size_inches(8, 6, forward=True)
             img = np.asarray(Image.open("../data/google_map_kanto.png"))
             plt.imshow(img)
 
@@ -86,10 +88,16 @@ class antVisualizer(AntColony):
                 for end in range(len(self.pheromone_mat)):
                     self.line_obj_box[start][end], = self.ax.plot((self.nodes[start][0], self.nodes[end][0]),
                                                                   (self.nodes[start][1], self.nodes[end][1]), color="r")
+                    self.line_obj_box[start][end].set_alpha(0.5)
 
         for start in range(len(self.pheromone_mat)):
             for end in range(len(self.pheromone_mat)):
                 update_alpha = float(self.pheromone_mat[start][end]) / np.max(self.pheromone_mat)
+
+                # design improvement.
+                thre = 20
+                if self.steps < thre:
+                    update_alpha *= float(self.steps + 1) / thre
                 self.line_obj_box[start][end].set_alpha(update_alpha)
 
         plt.draw()
