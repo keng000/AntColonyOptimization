@@ -70,7 +70,6 @@ class antVisualizer(AntColony):
         if init is True:
             fig, self.ax = plt.subplots()
             fig.set_size_inches(15, 12, forward=True)
-            # fig.set_size_inches(8, 6, forward=True)
             img = np.asarray(Image.open("../data/google_map_kanto.png"))
             plt.imshow(img)
 
