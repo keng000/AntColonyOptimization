@@ -49,13 +49,13 @@ class AntColony(object):
             return method()
 
         def _contrary_to_pheromone(self):
-            each_path_weight = np.array([])
-            for possible_vertex in self.possible_vertices:
+            each_path_weight = np.zeros(len(self.possible_vertices))
+
+            for idx, possible_vertex in enumerate(self.possible_vertices):
                 pheromone_amount = self.pheromone_mat[self.recent_vertex, possible_vertex]
                 distance = self.distance_mat[self.recent_vertex, possible_vertex]
-
-                possibility = pow(1.0 / pheromone_amount, self.alpha) * pow(1.0 / distance, self.beta)
-                each_path_weight = np.append(each_path_weight, possibility)
+                possibility = np.power(1.0 / pheromone_amount, self.alpha) * np.power(1.0 / distance, self.beta)
+                each_path_weight[idx] = possibility
 
             possibility_list = each_path_weight / np.sum(each_path_weight)
             return np.random.choice(self.possible_vertices, p=possibility_list)
@@ -64,13 +64,13 @@ class AntColony(object):
             return np.random.choice(self.possible_vertices)
 
         def _adaptive_to_pheromone(self):
-            each_path_weight = np.array([])
-            for possible_vertex in self.possible_vertices:
+            each_path_weight = np.zeros(len(self.possible_vertices))
+
+            for idx, possible_vertex in enumerate(self.possible_vertices):
                 pheromone_amount = self.pheromone_mat[self.recent_vertex, possible_vertex]
                 distance = self.distance_mat[self.recent_vertex, possible_vertex]
-
-                possibility = pow(pheromone_amount, self.alpha) * pow(1.0 / distance, self.beta)
-                each_path_weight = np.append(each_path_weight, possibility)
+                possibility = np.power(pheromone_amount, self.alpha) * np.power(1.0 / distance, self.beta)
+                each_path_weight[idx] = possibility
 
             possibility_list = each_path_weight / np.sum(each_path_weight)
             return np.random.choice(self.possible_vertices, p=possibility_list)
