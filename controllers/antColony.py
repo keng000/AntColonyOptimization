@@ -4,7 +4,7 @@ import math
 import numpy as np
 import pickle
 import yaml
-
+import multiprocessing as mp
 
 class AntColony(object):
     class Ant(object):
@@ -130,6 +130,42 @@ class AntColony(object):
                 print("shortest distance is ", self.shortest_distance)
                 print("============\n")
 
+    def run_optimizer_parallel(self):
+
+        process_num = mp.cpu_count()
+        for _ in range(self.iterations):
+            ants = self._init_ants()
+
+            ant_subsets = [ants[idx * len(ants) // process_num: (idx + 1)*len(ants) // process_num] for idx in range(process_num)]
+
+            rec_ants = []
+            jobs = []
+            for process_id in range(process_num):
+                par_conn, chil_conn = mp.Pipe()
+                pr = mp.Process(target=process_ants, args=(chil_conn, ))
+                jobs.append((pr, par_conn))
+                pr.start()
+                par_conn.send(ant_subsets[process_id])
+
+            for process, par_conn in jobs:
+                rec_ants += par_conn.recv()
+                process.join()
+
+            for ant in ants:
+                if self.shortest_distance > ant.passed_distance:
+                    self.shortest_distance = ant.passed_distance
+                    self.shortest_path = ant.passed_route
+
+                self.tau_matrix += ant.tau_matrix
+
+            self._update_pheromone_mat()
+
+            if self.verbose and _ % 1 == 0:
+                print("===result=== %d iterations" % _)
+                print("shortest path is", self.shortest_path)
+                print("shortest distance is ", self.shortest_distance)
+                print("============\n")
+
     def _create_distance_mat(self, nodes):
         '''
         create a distance matrix from node dictionary
@@ -161,6 +197,10 @@ class AntColony(object):
         self.pheromone_mat[self.pheromone_mat >= self.max_pheromone] = self.max_pheromone
         self.tau_matrix = self._init_mat(len(self.distance_mat), 0)
 
+def process_ants(conn):
+    ants = conn.recv()
+    [ant.start_search() for ant in ants]
+    conn.send(ants)
 
 def run_calculation(which_dataset):
     config = yaml.load(open("../config/aco_config.yml", "r"))
