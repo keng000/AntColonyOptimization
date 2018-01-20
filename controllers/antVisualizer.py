@@ -55,7 +55,8 @@ class antVisualizer(AntColony):
 
                         self.shortest_line_obj.append(obj)
                     plt.draw()
-                self._map_one_ant_pheromone(ant)
+
+                self.tau_matrix += ant.tau_matrix
 
             self._update_pheromone_mat()
             self._visualize_graph()

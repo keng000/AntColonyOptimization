@@ -8,7 +8,7 @@ import yaml
 
 class AntColony(object):
     class Ant(object):
-        def __init__(self, initial_position, distance_mat, pheromone_mat, alpha, beta, random, contrary):
+        def __init__(self, initial_position, distance_mat, pheromone_mat, alpha, beta, random, contrary, pheromone_constant):
 
             self.distance_mat = distance_mat
             self.pheromone_mat = pheromone_mat
@@ -21,11 +21,14 @@ class AntColony(object):
             self.beta = beta
             self.random = random
             self.contrary = contrary
+            self.pheromone_constant = pheromone_constant
 
             self.possible_vertices = list(range(len(distance_mat)))
             self.possible_vertices.remove(initial_position)
 
             self.passed_distance = 0
+
+            self.tau_matrix = np.zeros(self.pheromone_mat.shape)
 
         def start_search(self):
             while self.possible_vertices:
@@ -35,6 +38,7 @@ class AntColony(object):
             self.passed_distance += self.distance_mat[self.recent_vertex, self.initial_vertex]
             self.recent_vertex = self.initial_vertex
             self.passed_route.append(self.initial_vertex)
+            self._map_pheromone()
 
         def _move_to_next_vertex(self, recent, next_):
             self.passed_distance += self.distance_mat[recent][next_]
@@ -75,6 +79,11 @@ class AntColony(object):
             possibility_list = each_path_weight / np.sum(each_path_weight)
             return np.random.choice(self.possible_vertices, p=possibility_list)
 
+        def _map_pheromone(self):
+            for vertex_idx in range(len(self.passed_route) - 1):
+                pheromone_delta = float(self.pheromone_constant) / self.passed_distance
+                self.tau_matrix[self.passed_route[vertex_idx], self.passed_route[vertex_idx + 1]] += pheromone_delta
+
     def __init__(self, nodes, ant_num_of_each_nodes, init_pheromone_value, alpha, beta, rho, random, contrary,
                  pheromone_constant, iterations, verbose=False):
 
@@ -111,7 +120,7 @@ class AntColony(object):
                     self.shortest_distance = ant.passed_distance
                     self.shortest_path = ant.passed_route
 
-                self._map_one_ant_pheromone(ant)
+                self.tau_matrix += ant.tau_matrix
 
             self._update_pheromone_mat()
 
@@ -144,18 +153,13 @@ class AntColony(object):
         '''
         return [self.Ant(initial_position=idx % len(self.distance_mat), distance_mat=self.distance_mat,
                          pheromone_mat=self.pheromone_mat, alpha=self.alpha, beta=self.beta, random=self.random,
-                         contrary=self.contrary) for idx in range(self.ant_num)]
+                         contrary=self.contrary, pheromone_constant=self.pheromone_constant) for idx in range(self.ant_num)]
 
     def _update_pheromone_mat(self):
         self.pheromone_mat = self.pheromone_mat * self.rho + self.tau_matrix
         self.pheromone_mat[self.pheromone_mat <= self.min_pheromone] = self.min_pheromone
         self.pheromone_mat[self.pheromone_mat >= self.max_pheromone] = self.max_pheromone
         self.tau_matrix = self._init_mat(len(self.distance_mat), 0)
-
-    def _map_one_ant_pheromone(self, ant):
-        for vertex_idx in range(len(ant.passed_route) - 1):
-            pheromone_delta = float(self.pheromone_constant) / ant.passed_distance
-            self.tau_matrix[ant.passed_route[vertex_idx], ant.passed_route[vertex_idx + 1]] += pheromone_delta
 
 
 def run_calculation(which_dataset):
