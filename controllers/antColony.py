@@ -1,10 +1,12 @@
 # coding:utf-8
 from datetime import datetime
+import itertools
 import math
+import multiprocessing as mp
 import numpy as np
 import pickle
 import yaml
-import multiprocessing as mp
+
 
 class AntColony(object):
     class Ant(object):
@@ -131,25 +133,15 @@ class AntColony(object):
                 print("============\n")
 
     def run_optimizer_parallel(self):
-
         process_num = mp.cpu_count()
+        pool = mp.Pool()
         for _ in range(self.iterations):
             ants = self._init_ants()
 
             ant_subsets = [ants[idx * len(ants) // process_num: (idx + 1)*len(ants) // process_num] for idx in range(process_num)]
 
-            rec_ants = []
-            jobs = []
-            for process_id in range(process_num):
-                par_conn, chil_conn = mp.Pipe()
-                pr = mp.Process(target=process_ants, args=(chil_conn, ))
-                jobs.append((pr, par_conn))
-                pr.start()
-                par_conn.send(ant_subsets[process_id])
-
-            for process, par_conn in jobs:
-                rec_ants += par_conn.recv()
-                process.join()
+            ants = pool.map(func=process_ants, iterable=ant_subsets)
+            ants = list(itertools.chain.from_iterable(ants))
 
             for ant in ants:
                 if self.shortest_distance > ant.passed_distance:
@@ -197,10 +189,9 @@ class AntColony(object):
         self.pheromone_mat[self.pheromone_mat >= self.max_pheromone] = self.max_pheromone
         self.tau_matrix = self._init_mat(len(self.distance_mat), 0)
 
-def process_ants(conn):
-    ants = conn.recv()
+def process_ants(ants):
     [ant.start_search() for ant in ants]
-    conn.send(ants)
+    return ants
 
 def run_calculation(which_dataset):
     config = yaml.load(open("../config/aco_config.yml", "r"))
