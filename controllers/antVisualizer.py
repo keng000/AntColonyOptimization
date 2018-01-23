@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 from PIL import Image
+import sys
 import yaml
 
 from antColony import AntColony
@@ -12,13 +13,15 @@ from antColony import AntColony
 class antVisualizer(AntColony):
     def __init__(
             self, nodes, ant_num_of_each_nodes, init_pheromone_value, alpha, beta, rho, random, contrary,
-            pheromone_constant, iterations, base_img_path,verbose=False
+            pheromone_constant, iterations, base_img_path, verbose=None
     ):
 
         super(antVisualizer, self).__init__(
             nodes, ant_num_of_each_nodes, init_pheromone_value, alpha, beta, rho,
             random, contrary, pheromone_constant, iterations, verbose
         )
+
+        self.verbose = verbose
 
         # for visualization
         self.steps = 0
@@ -29,8 +32,8 @@ class antVisualizer(AntColony):
         self._visualize_graph(init=True)
 
     def run_optimizer(self):
-        for _ in range(self.iterations):
-            self.steps = _
+        for iteration in range(self.iterations):
+            self.steps = iteration
             ants = self._init_ants()
 
             for ant in ants:
@@ -61,8 +64,8 @@ class antVisualizer(AntColony):
             self._update_pheromone_mat()
             self._visualize_graph()
 
-            if self.verbose and _ % 1 == 0:
-                print("===result=== %d iterations" % _)
+            if self.verbose is not None and iteration % self.verbose == 0:
+                print("===result=== %d iterations" % iteration)
                 print("shortest path is", self.shortest_path)
                 print("shortest distance is ", self.shortest_distance)
                 print("============\n")
@@ -71,7 +74,7 @@ class antVisualizer(AntColony):
         if init is True:
             fig, self.ax = plt.subplots()
             fig.set_size_inches(15, 12, forward=True)
-            img = np.asarray(Image.open("../data/google_map_kanto.png"))
+            img = np.asarray(Image.open(self.base_img_path))
             plt.imshow(img)
 
             plt.xlim(0, img.shape[1])
@@ -135,6 +138,6 @@ def run_visualizer(which_dataset, base_img_path):
 if __name__ == '__main__':
 
     run_visualizer(
-        which_dataset="../data/map_kanto_coord.pkl",
-        base_img_path="../data/google_map_kanto.png"
+        which_dataset=sys.argv[1],
+        base_img_path=sys.argv[2]
     )

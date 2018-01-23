@@ -8,3 +8,4 @@ contrary: 0.07
 pheromone_constant: 20
 iterations: 101
 initialize: False
+verbose: 1

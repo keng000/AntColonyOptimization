@@ -5,6 +5,7 @@ import math
 import multiprocessing as mp
 import numpy as np
 import pickle
+import sys
 import yaml
 
 
@@ -87,7 +88,7 @@ class AntColony(object):
                 self.tau_matrix[self.passed_route[vertex_idx], self.passed_route[vertex_idx + 1]] += pheromone_delta
 
     def __init__(self, nodes, ant_num_of_each_nodes, init_pheromone_value, alpha, beta, rho, random, contrary,
-                 pheromone_constant, iterations, verbose=False):
+                 pheromone_constant, iterations, verbose=None):
 
         self.nodes = nodes
         self.distance_mat = self._create_distance_mat(nodes=nodes)
@@ -111,7 +112,7 @@ class AntColony(object):
         self.shortest_distance = float("inf")
 
     def run_optimizer(self):
-        for _ in range(self.iterations):
+        for iteration in range(self.iterations):
             ants = self._init_ants()
 
             for ant in ants:
@@ -126,8 +127,8 @@ class AntColony(object):
 
             self._update_pheromone_mat()
 
-            if self.verbose and _ % 1 == 0:
-                print("===result=== %d iterations" % _)
+            if self.verbose is not None and iteration % self.verbose == 0:
+                print("===result=== %d iterations" % iteration)
                 print("shortest path is", self.shortest_path)
                 print("shortest distance is ", self.shortest_distance)
                 print("============\n")
@@ -135,7 +136,7 @@ class AntColony(object):
     def run_optimizer_parallel(self):
         process_num = mp.cpu_count()
         pool = mp.Pool()
-        for _ in range(self.iterations):
+        for iteration in range(self.iterations):
             ants = self._init_ants()
 
             ant_subsets = [ants[idx * len(ants) // process_num: (idx + 1)*len(ants) // process_num] for idx in range(process_num)]
@@ -152,8 +153,8 @@ class AntColony(object):
 
             self._update_pheromone_mat()
 
-            if self.verbose and _ % 1 == 0:
-                print("===result=== %d iterations" % _)
+            if self.verbose is not None and iteration % self.verbose == 0:
+                print("===result=== %d iterations" % iteration)
                 print("shortest path is", self.shortest_path)
                 print("shortest distance is ", self.shortest_distance)
                 print("============\n")
@@ -189,9 +190,11 @@ class AntColony(object):
         self.pheromone_mat[self.pheromone_mat >= self.max_pheromone] = self.max_pheromone
         self.tau_matrix = self._init_mat(len(self.distance_mat), 0)
 
+
 def process_ants(ants):
     [ant.start_search() for ant in ants]
     return ants
+
 
 def run_calculation(which_dataset):
     config = yaml.load(open("../config/aco_config.yml", "r"))
@@ -209,7 +212,7 @@ def run_calculation(which_dataset):
         contrary=config["contrary"],
         pheromone_constant=config["pheromone_constant"],
         iterations=config["iterations"],
-        verbose=True
+        verbose=config["verbose"]
     )
 
     aco.run_optimizer()
@@ -223,4 +226,4 @@ def run_calculation(which_dataset):
 
 if __name__ == '__main__':
 
-    run_calculation(which_dataset="../data/map_kanto_coord.pkl")
+    run_calculation(which_dataset=sys.argv[1])
